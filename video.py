@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 import os
 from fastapi import FastAPI
 
-# Use a correct model name - choose one that exists in your Ollama
-llm = ChatOllama(model="llama3.2:3b")  # or whatever model you have
+llm = ChatOllama(model="llama3.2:3b")
 
 analysis_prompt = ChatPromptTemplate.from_template(
     """
