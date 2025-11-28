@@ -23,7 +23,7 @@ analysis_prompt = ChatPromptTemplate.from_template(
 )
 
 loader = YoutubeLoader.from_youtube_url(
-    "https://youtu.be/-Yj1At289rw?si=wgHCePrBGGrP0XuJ",
+    "https://youtu.be/dQw4w9WgXcQ?si=zPrVJFjOB-J2xbWj",
     add_video_info=False
 )
 
