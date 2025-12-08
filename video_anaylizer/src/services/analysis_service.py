@@ -2,7 +2,7 @@ import time
 import json
 import re
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
@@ -13,6 +13,7 @@ from ..models.schemas import (
     Insight,
     VideoMetadata,
     AnalysisType,
+    TranscriptChunk,
 )
 from .youtube_service import YouTubeService
 
@@ -59,6 +60,29 @@ class AnalysisService:
         )
 
     # ---------------------------------------------
+    # INTERNAL: split transcript to chunks
+    # ---------------------------------------------
+    def _split_transcript(self, text: str, max_len: int = 400) -> List[TranscriptChunk]:
+        sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+        chunks: List[TranscriptChunk] = []
+        current = ""
+        idx = 0
+
+        for s in sentences:
+            if len(current) + len(s) <= max_len:
+                current += (" " if current else "") + s
+            else:
+                if current:
+                    chunks.append(TranscriptChunk(index=idx, text=current))
+                    idx += 1
+                current = s
+
+        if current:
+            chunks.append(TranscriptChunk(index=idx, text=current))
+
+        return chunks
+
+    # ---------------------------------------------
     # MAIN ANALYSIS FUNCTION
     # ---------------------------------------------
     async def analyze(self, youtube_url: str, mode: AnalysisType = AnalysisType.full):
@@ -73,16 +97,17 @@ class AnalysisService:
             if not video_data["success"]:
                 return AnalysisResponse(
                     success=False,
-                    transcript="",
+                    transcript_chunks=[],
                     topics=[],
                     insights=[],
                     summary="",
                     processing_time=time.time() - start_time,
                     metadata=None,
-                    error=video_data["error"],
+                    error=video_data.get("error", "Unknown error"),
                 )
 
-            transcript = video_data["transcript"][:6000]  # Safety limit
+            # Safety limit for LLM
+            transcript = video_data["transcript"][:6000]
             metadata = VideoMetadata(
                 title=video_data.get("video_title"),
                 author=video_data.get("author"),
@@ -105,11 +130,14 @@ class AnalysisService:
             insights = [Insight(**i) for i in parsed.get("insights", [])]
             summary = parsed.get("summary", "No summary available")
 
+            # 4. Split transcript for UI-friendly response
+            transcript_chunks = self._split_transcript(transcript, max_len=350)
+
             elapsed = time.time() - start_time
 
             return AnalysisResponse(
                 success=True,
-                transcript=transcript,
+                transcript_chunks=transcript_chunks,
                 topics=topics,
                 insights=insights,
                 summary=summary,
@@ -123,7 +151,7 @@ class AnalysisService:
 
             return AnalysisResponse(
                 success=False,
-                transcript="",
+                transcript_chunks=[],
                 topics=[],
                 insights=[],
                 summary="",
@@ -139,15 +167,15 @@ class AnalysisService:
         """Extract correct JSON from messy LLM output."""
         try:
             return json.loads(text)
-        except:
+        except Exception:
             pass
 
-        # Extract ```json blocks
-        json_blocks = re.findall(r"```json(.*?)```", text, re.DOTALL)
+        # Extract ```
+        json_blocks = re.findall(r"```json(.*?)```")
         if json_blocks:
             try:
-                return json.loads(json_blocks[0].strip())
-            except:
+                return json.loads(json_blocks.strip())
+            except Exception:
                 pass
 
         # Extract largest JSON-like structure
@@ -155,7 +183,7 @@ class AnalysisService:
         for block in brace_match:
             try:
                 return json.loads(block)
-            except:
+            except Exception:
                 continue
 
         # Fallback

@@ -1,6 +1,7 @@
 import re
 import asyncio
 from typing import Dict, Any
+
 from langchain_community.document_loaders import YoutubeLoader
 
 
@@ -11,7 +12,7 @@ class YouTubeService:
         patterns = [
             r"(?:youtube\.com/watch\?v=|youtu\.be/)([^&/\?\n]+)",
             r"youtube\.com/embed/([^&/\?\n]+)",
-            r"youtube\.com/v/([^&/\?\n]+)"
+            r"youtube\.com/v/([^&/\?\n]+)",
         ]
         for p in patterns:
             m = re.search(p, url)
