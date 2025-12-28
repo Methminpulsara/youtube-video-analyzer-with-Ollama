@@ -16,7 +16,7 @@ from ..models.schemas import (
     VideoMetadata,
     AnalysisType,
     TranscriptChunk,
-    KeyMoment  # අලුතින් add කළ එක
+    KeyMoment
 )
 from .youtube_service import YouTubeService
 
@@ -26,9 +26,7 @@ logger = logging.getLogger("AnalysisService")
 logger.setLevel(logging.INFO)
 
 
-# --- LLM Response Schema (Updated) ---
 class LLMResponseSchema(BaseModel):
-    # Metadata fix කිරීම සඳහා
     title: str = Field(description="Most suitable title for the video")
     author: str = Field(description="Speaker or channel name")
 
@@ -76,11 +74,9 @@ class AnalysisService:
 
             transcript_text = video_data["transcript"][:8000]
 
-            # LLM Invoke
             chain = self.analysis_prompt | self.llm
             result: LLMResponseSchema = await chain.ainvoke({"transcript": transcript_text})
 
-            # Metadata Optimization: YouTube එකෙන් එන්නේ නැත්නම් LLM එකෙන් එන දේ ගන්නවා
             metadata = VideoMetadata(
                 title=video_data.get("video_title") if video_data.get("video_title") != "Unknown" else result.title,
                 author=video_data.get("author") if video_data.get("author") != "Unknown" else result.author,
@@ -94,7 +90,7 @@ class AnalysisService:
                 transcript_chunks=transcript_chunks,
                 topics=result.topics,
                 insights=result.insights,
-                key_moments=result.key_moments,  # අලුතින් එකතු විය
+                key_moments=result.key_moments,
                 summary=result.summary,
                 metadata=metadata,
                 processing_time=time.time() - start_time,
