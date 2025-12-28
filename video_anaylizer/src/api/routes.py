@@ -4,7 +4,6 @@ from ..models.schemas import AnalysisRequest, AnalysisResponse, AnalysisType
 
 router = APIRouter()
 
-# DI best practice
 def get_service():
     return AnalysisService()
 
@@ -31,7 +30,6 @@ async def analyze_insights(url: str, service: AnalysisService = Depends(get_serv
 
 @router.get("/debug/raw-llm")
 async def debug_raw(url: str, service: AnalysisService = Depends(get_service)):
-    """📌 Developer-only endpoint to view raw LLM output."""
     data = await service.youtube_service.get_transcript_async(url)
     transcript = data["transcript"][:4000]
 
@@ -39,8 +37,3 @@ async def debug_raw(url: str, service: AnalysisService = Depends(get_service)):
     result = chain.invoke({"transcript": transcript})
 
     return {"raw_output": result.content}
-
-
-@router.get("/health")
-async def health():
-    return {"status": "OK", "service": "YouTube Analyzer API"}
