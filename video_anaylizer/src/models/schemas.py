@@ -68,6 +68,9 @@ class TranscriptChunk(BaseModel):
     index: int = Field(..., description="Chunk order index", example=0)
     text: str = Field(..., description="Part of the transcript")
 
+class KeyMoment(BaseModel):
+    timestamp: str = Field(..., description="Time marker (e.g. 02:30)")
+    description: str = Field(..., description="Short summary of what happens at this time")
 
 # ---------- Main request model ----------
 
