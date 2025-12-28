@@ -4,8 +4,6 @@ from typing import Dict, Any
 
 from langchain_community.document_loaders import YoutubeLoader
 
-
-
 class YouTubeService:
 
     @staticmethod
