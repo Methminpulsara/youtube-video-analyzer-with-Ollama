@@ -5,6 +5,7 @@ from typing import Dict, Any
 from langchain_community.document_loaders import YoutubeLoader
 
 
+
 class YouTubeService:
 
     @staticmethod
@@ -25,15 +26,10 @@ class YouTubeService:
         vid = YouTubeService.extract_video_id(url)
         return f"https://www.youtube.com/watch?v={vid}" if vid else url
 
-    # ---------------------------------------------
-    # ASYNC VERSION
-    # ---------------------------------------------
     async def get_transcript_async(self, url: str) -> Dict[str, Any]:
-        """Loads transcript using fallback-safe async logic."""
         cleaned = self.clean_youtube_url(url)
 
         try:
-            # FIRST TRY (full metadata)
             loader = YoutubeLoader.from_youtube_url(cleaned, add_video_info=True)
             docs = await asyncio.to_thread(loader.load)
 
@@ -49,7 +45,6 @@ class YouTubeService:
         except Exception:
             pass
 
-        # SECOND TRY
         try:
             loader = YoutubeLoader.from_youtube_url(cleaned, add_video_info=False)
             docs = await asyncio.to_thread(loader.load)
