@@ -6,9 +6,6 @@ from src.api.routes import router
 app = FastAPI(
     title="YouTube AI Analyzer API",
     description="AI-powered YouTube video content analysis with structured responses",
-    version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
 )
 
 app.add_middleware(
